@@ -84,7 +84,7 @@ resource "aws_security_group" "gob_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["95.98.198.170/32"]
+    cidr_blocks = ["0.0.0.0/0"] # heh
   }
 
   egress {
@@ -96,5 +96,26 @@ resource "aws_security_group" "gob_sg" {
 
   tags = {
     Name = "learning-sg"
+  }
+}
+
+resource "aws_key_pair" "gob_auth" {
+    key_name   = "gobkey"
+    public_key = file("~/.ssh/gobkey.pub")
+}
+
+resource "aws_instance" "gob_instance" {
+  instance_type = "t2.micro"
+  ami           = data.aws_ami.server_ami.id
+  key_name      = aws_key_pair.gob_auth.id
+  subnet_id     = aws_subnet.gob_subnet.id
+  vpc_security_group_ids = [aws_security_group.gob_sg.id]
+
+  tags = {
+    Name = "learning-node"
+  }
+
+  root_block_device {
+    volume_size = 10
   }
 }
